@@ -50,8 +50,27 @@ public:
 };
 
 
+class JScopeData {
+public:
+	int mLogCnt;
+	int mVg;
+	int mVd;
+	int mIa;
+	int mIb;
+	int mIg;
+	int mId;
+	int EstOmega;
+	int EstTheta;
+};
+
 class DebugCtrl {
 private:
+
+	char mJS_RTT_UpBuffer[4096];
+	JScopeData mJScopeData;
+
+
+
 	int mLogcount;
 	std::string mOutputStr;
 	char mOutputChar[128] = {};

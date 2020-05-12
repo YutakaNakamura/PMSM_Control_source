@@ -32,14 +32,9 @@
 #include "motorparamsetting.h"
 
 
-
-
-//ヘテロ用R補償の位相合わせ
-#define HF_HETERODYNE_PHASE_OFFSET (float)(0*2*M_PI/360.0f)
-#define HF_HETERODYNE_PHASE_OFFSET_D 1.016756949f
-#define HF_HETERODYNE_PHASE_OFFSET_Q 1.016756949f
-//#define HF_HETERODYNE_PHASE_OFFSET_Q 0.69797067047f
-
+//制御器,サンプリング周波数
+#define CONTROLLER_SAMPLING_FREQ PWM_FREQ_HZ
+#define CONTROLLER_SAMPLING_TIME (1.0f/(float)CONTROLLER_SAMPLING_FREQ )
 
 //LPFパラメータ
 #define HF_LPF_CUTOFF_FREQ 44
@@ -73,10 +68,6 @@
 //高周波重畳パラメータ-正弦波バージョン
 #define SINEWAVE_CONVOLUTION 1
 #include "sinewaveconvsetting.h"
-
-//高周波重畳パラメータ-矩形波バージョン
-#define SQWAVE_CONVOLUTION 0
-#include "sqwaveconvsetting.h"
 
 
 //OpenLoopから変更開始の加速度

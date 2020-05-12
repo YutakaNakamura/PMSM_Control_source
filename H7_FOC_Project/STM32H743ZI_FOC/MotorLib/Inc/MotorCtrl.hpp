@@ -20,7 +20,6 @@ public:
 		FOC_Convolution_Start,
 		FOC_Convolution,
 		FOC_Convolution_HighSpeed,
-		FOC_SqWaveConvolution,
 	};
 
 	enum DEBUGorSPI { //重い処理だからそれぞれ交互に出すためのEnum
@@ -31,10 +30,15 @@ public:
 private:
 	MotorInfo mMotorInfo;
 	Observer mObserver;
-	SineWaveConvCalculator mSineWaveConvCalculator;
-	SqWaveConvCalculator mSqWaveConvCalculator;
 
+	//鏡相推定器
+	MirrorPhaseEstimator<float> mMirrorPhaseEstimator;
 
+	//PLL
+	PhaseSynchronizer<float> mPhaseSynchronizer;
+
+	//高周波生成器
+	HighFreqVoltageCommander<float> mHFVC;
 
 	PID mIdPID, mIqPID;
 	PID mIganmaPID, mIdeltaPID;
@@ -48,9 +52,6 @@ private:
 
 	UIStatus mUIStatus;
 	DebugCtrl mDebugCtrl;
-
-	WaveGenerator mWaveGen;//高周波重畳用
-	SqWaveGenerator mSqWaveGen;//矩形波高周波重畳用
 
 public:
 	MotorCtrl();
@@ -71,7 +72,6 @@ public:
 	void SetVhTask();
 	void SetVhTaskForSqWave();
 	void WaveGenTask(void);
-	void SqWaveGenTask(void);
 	void ReadCurrentTask();
 	void setIuvw(float pIu, float pIv, float pIw);
 	void ReadVoltageTask();
@@ -79,12 +79,9 @@ public:
 	void ReadAngleTask(void);
 	fp_rad GetAngleForOpenLoop();
 	fp_rad GetAngleForFOC();
-	fp_rad GetAngleForSineWaveConv(void);
-	fp_rad GetAngleForSqWaveConv(void);
 
 	void clarkTransform(void);
 	void parkTransform(void);
-	void parkGanmaDelta(void);
 	void parkabtogd(void);
 
 	void ObserverTask();

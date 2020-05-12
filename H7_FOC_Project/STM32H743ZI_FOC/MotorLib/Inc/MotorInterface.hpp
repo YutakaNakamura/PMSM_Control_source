@@ -31,7 +31,16 @@
 #include "Observer.hpp"
 //#include "HFConvolution.hpp"
 #include "SineWaveConvCalculator.hpp"
-#include "SqWaveConvCalculator.hpp"
+
+//高周波
+
+//鏡相推定器
+#include "MirrorPhaseEstimator.hpp"
+//PLL
+#include "PhaseSynchronizer.hpp"
+//高周波生成器
+#include "HighFreqVoltageCommander.hpp"
+
 
 #include <array>
 #include <vector>

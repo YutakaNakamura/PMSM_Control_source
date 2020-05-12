@@ -34,13 +34,9 @@ public:
 	float mVh = 0;
 	float mVoffset = 0;
 
+	float mHighFreqOmega = 0;
 	float mSinForConv = 0;
 	float mCosForConv = 0;
-	float mSinForDemodulation = 0;
-	float mCosForDemodulation = 0;
-
-	//矩形波高周波重畳
-	float mSqWaveForConv = 0;
 
 	//高周波重畳デバッグ変数
 	std::array<float, 2> mConvIdqc = {0,0};
@@ -51,12 +47,13 @@ public:
 	fp_rad mgdArg;//単位[rad]
 	fp_rad mArgErr;//単位[rad]
 
-	//forDebug(ドライブには直接必要はない)
-	fp_rad mEstOmega;//単位[rad/s]
-	fp_rad mEstOmega_Observer;//単位[rad/s]
-	fp_rad mEstOmega_HF;//単位[rad/s]
-
 	fp_rad mEstTheta;//単位[rad]
+	fp_rad mEstOmega;//単位[rad/s]
+
+//	fp_rad mEstOmega_Observer;//単位[rad/s]
+//	fp_rad mEstOmega_HF;//単位[rad/s]
+
+
 
 };
 

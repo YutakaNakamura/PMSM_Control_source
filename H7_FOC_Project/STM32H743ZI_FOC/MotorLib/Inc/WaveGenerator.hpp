@@ -12,11 +12,18 @@
 #include "Trigonometric.hpp"
 #include "MotorLibDefPack.hpp"
 #include <array>
+
 class WaveGenerator {
 private:
+
+
+
 	int mTargetHz;
 	int mCount = 0;
 	float mThetaPerStep;
+
+	float mOmega;
+
 public:
 	WaveGenerator();
 	virtual ~WaveGenerator();
@@ -24,16 +31,6 @@ public:
 	void ResetPhase();
 	float OutputWaveform();
 	std::array<float, 2> OutputWaves();
-	std::array<float, 4> OutputWavesSupOffsetPhase(const fp_rad &pOffset);
-	std::array<float, 4> OutputWavesSupOffsetPhase_dq(const fp_rad &pOffset_dc, const fp_rad &pOffset_qc);
 };
-
-class SqWaveGenerator {
-private:
-	bool mIsPositive = true;
-public:
-	float OutputSqWave();
-};
-
 
 #endif /* INC_WAVEGENERATOR_HPP_ */

@@ -9,36 +9,34 @@
 #define INC_MOTORMATH_HPP_
 
 #include "MotorLibDefPack.hpp"
-//#include <array>
+#include <array>
 #include "Matrix.hpp"
 #include "Trigonometric.hpp"
 
-class MotorMath {
-public:
-	MotorMath();
-	virtual ~MotorMath();
-	static inline std::array<float, 2> clarkTransform (const std::array<float, 3> &pVector);
-	static inline std::array<float, 2> parkTransform( const fp_rad &pRadian,
-												const std::array<float, 2> &pVector);
+namespace MotorMath {
 
-	static inline std::array<float, 2> InvparkTransform( const fp_rad &pRadian,
-												   const std::array<float, 2> &pVector);
-	static inline std::array<float, 3> InvclarkTransform (const std::array<float, 2> &pVector);
-	static inline std::array<float, 3> SVM(const std::array<float, 2> &pVector, const float &pVoltageVCC);
-
-	static inline fp_rad AngleDiff(const fp_rad &pAnglePlus, const fp_rad &pAngleMinus);
-};
+//static inline std::array<float, 2> clarkTransform (const std::array<float, 3> &pVector);
+//	sinline std::array<float, 2> parkTransform( const fp_rad &pRadian,
+//												const std::array<float, 2> &pVector);
+//
+//	static inline std::array<float, 2> InvparkTransform( const fp_rad &pRadian,
+//												   const std::array<float, 2> &pVector);
+//	static inline std::array<float, 3> InvclarkTransform (const std::array<float, 2> &pVector);
+//	static inline std::array<float, 3> SVM(const std::array<float, 2> &pVector, const float &pVoltageVCC);
+//
+//	static inline fp_rad AngleDiff(const fp_rad &pAnglePlus, const fp_rad &pAngleMinus);
+//};
 
 //input [u,v,w]
 //output [a,b]
-inline std::array<float, 2> MotorMath::clarkTransform (const std::array<float, 3> &pVector) {
+static inline std::array<float, 2> clarkTransform (const std::array<float, 3> &pVector) {
 	//mIalpha = mIu - (mIv + mIw)/2;
 	//mIbeta = (mIv - mIw)* 1.7320508f/2;
 	return { ( 0.81649658f * ( pVector.at(0) - ((pVector.at(1) + pVector.at(2))/2)  ) ),
 				  ( 0.81649658f * ( (pVector.at(1) - pVector.at(2)) * 1.7320508f/2 ) ) };
 };
 
-inline std::array<float, 2> MotorMath::parkTransform(const fp_rad &pRadian, const std::array<float, 2> &pVector) {
+static inline std::array<float, 2> parkTransform(const fp_rad &pRadian, const std::array<float, 2> &pVector) {
 	float sinVal = Trigonometric::sin(pRadian);
 	float cosVal = Trigonometric::cos(pRadian);
 	float Invsin = -1.0f * sinVal;
@@ -48,7 +46,7 @@ inline std::array<float, 2> MotorMath::parkTransform(const fp_rad &pRadian, cons
 
 }
 
-inline std::array<float, 2> MotorMath::InvparkTransform(const fp_rad &pRadian, const std::array<float, 2> &pVector) {
+static inline std::array<float, 2> InvparkTransform(const fp_rad &pRadian, const std::array<float, 2> &pVector) {
 	//mId =  mLib.getCosList().at(mArg) * mIalpha + mLib.getSinList().at(mArg) * mIbeta;
 	//mIq = -mLib.getSinList().at(mArg) * mIalpha + mLib.getCosList().at(mArg) * mIbeta;
 	float sinVal = Trigonometric::sin(pRadian);
@@ -61,7 +59,7 @@ inline std::array<float, 2> MotorMath::InvparkTransform(const fp_rad &pRadian, c
 
 //input [a,b]
 //output [u,v,w]
-inline  std::array<float, 3> MotorMath::InvclarkTransform (const std::array<float, 2> &pVector) {
+static inline std::array<float, 3> InvclarkTransform (const std::array<float, 2> &pVector) {
 	//mVu = 0.75f * mValpha;
 	//mVv = -0.75f * mValpha + mValpha / 3 + mVbeta / 1.7320508f;
 	//mVw = - mValpha / 3 - mVbeta / 1.7320508f;
@@ -77,14 +75,14 @@ inline  std::array<float, 3> MotorMath::InvclarkTransform (const std::array<floa
 
 //input [a,b],VCC
 //output Duty[u,v,w]
-inline  std::array<float, 3> MotorMath::SVM (const std::array<float, 2> &pVector, const float &pVoltageVCC) {
+static inline std::array<float, 3> SVM (const std::array<float, 2> &pVector, const float &pVoltageVCC) {
 	float Va = pVector.at(0);
 	float Vb = pVector.at(1);
 
 	bool sector0 = ((Va*Va)>(Vb*Vb / 3)) && (Va >= 0) && (Vb >= 0);
 	bool sector5 = ((Va*Va)>(Vb*Vb / 3)) && (Va>0) && (Vb<0);
 
-	bool sector1 = ((Va*Va) <= (Vb*Vb / 3)) && (Vb >= 0);//Va=Vb=0はここに入る
+	bool sector1 = ((Va*Va) <= (Vb*Vb / 3)) && (Vb >= 0);//Va=Vb=0
 	bool sector4 = ((Va*Va) <= (Vb*Vb / 3)) && (Vb<0);
 
 	bool sector2 = ((Va*Va)>(Vb*Vb / 3)) && (Va<0) && (Vb>0);
@@ -179,10 +177,10 @@ inline  std::array<float, 3> MotorMath::SVM (const std::array<float, 2> &pVector
 //Borrow 350 10
 //Nominal:diff_carry=380-40=340 ,diff=-20,diff_borrow=20-(400)=-380
 //Borrow:diff_carry=710-10=700 ,diff=340, diff_borrow=350-(370)=-20
-inline fp_rad MotorMath::AngleDiff(const fp_rad &pAnglePlus, const fp_rad &pAngleMinus) {
+static inline fp_rad AngleDiff(const fp_rad &pAnglePlus, const fp_rad &pAngleMinus) {
 	fp_rad diff = pAnglePlus - pAngleMinus;
-	fp_rad diff_carry = pAnglePlus + 2*PI - pAngleMinus;
-	fp_rad diff_borrow = pAnglePlus - (pAngleMinus + 2*PI);
+	fp_rad diff_carry = pAnglePlus + 2*M_PI - pAngleMinus;
+	fp_rad diff_borrow = pAnglePlus - (pAngleMinus + 2*M_PI);
 
 	float diff2 = diff * diff;
 	float diff_carry2 = diff_carry * diff_carry;
@@ -204,4 +202,5 @@ inline fp_rad MotorMath::AngleDiff(const fp_rad &pAnglePlus, const fp_rad &pAngl
 
 }
 
+}
 #endif /* INC_MOTORMATH_HPP_ */
