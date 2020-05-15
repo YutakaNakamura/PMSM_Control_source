@@ -39,7 +39,9 @@ DebugCtrl::DebugCtrl() {
 //	InitOutput += "</Init>";
 //	InitOutput += "\n";
 //	SEGGER_RTT_WriteString(0,InitOutput.c_str());
-	SEGGER_RTT_ConfigUpBuffer(1, "JScope_I4I4I4I4I4I4I4I4I4", &mJS_RTT_UpBuffer[0], sizeof(mJS_RTT_UpBuffer), SEGGER_RTT_MODE_NO_BLOCK_SKIP);
+	SEGGER_RTT_ConfigUpBuffer(1, "JScope_I4I4I4I4I4", &mJS_RTT_UpBuffer[0], sizeof(mJS_RTT_UpBuffer), SEGGER_RTT_MODE_NO_BLOCK_SKIP);
+	//9
+	//	SEGGER_RTT_ConfigUpBuffer(1, "JScope_I4I4I4I4I4I4I4I4I4", &mJS_RTT_UpBuffer[0], sizeof(mJS_RTT_UpBuffer), SEGGER_RTT_MODE_NO_BLOCK_SKIP);
 //	SEGGER_RTT_ConfigUpBuffer(1, "JScope_i2", &mJS_UpBUffer1[0], sizeof(mJS_UpBUffer1), SEGGER_RTT_MODE_NO_BLOCK_SKIP);
 //	SEGGER_RTT_ConfigUpBuffer(2, "JScope_i2", &mJS_UpBUffer2[0], sizeof(mJS_UpBUffer2), SEGGER_RTT_MODE_NO_BLOCK_SKIP);
 //	SEGGER_RTT_ConfigUpBuffer(3, "JScope_i2", &mJS_UpBUffer3[0], sizeof(mJS_UpBUffer3), SEGGER_RTT_MODE_NO_BLOCK_SKIP);
@@ -173,13 +175,15 @@ DebugCtrl::~DebugCtrl() {
 //}
 
 
-void DebugCtrl::RTTOutput(const MotorInfo &pMotorInfo, const UIStatus &pUIStatus) {
+void DebugCtrl::RTTOutput(const MotorInfo<float> &pMotorInfo, const UIStatus &pUIStatus) {
 
 	//namespace karma = boost::spirit::karma;
 
-	int milIu = (int)( pMotorInfo.mIuvw.at(0) * 1000 );
-	int milIv = (int)( pMotorInfo.mIuvw.at(1) * 1000 );
-	int milIw = (int)( pMotorInfo.mIuvw.at(2) * 1000 );
+	std::array<float,3> Iuvw = pMotorInfo.getIuvw();
+
+	int milIu = (int)( Iuvw.at(0) * 1000 );
+	int milIv = (int)( Iuvw.at(1) * 1000 );
+	int milIw = (int)( Iuvw.at(2) * 1000 );
 //	int DegArg = (int)(pMotorInfo.mgdArg/M_PI * 180 );//指令値の角度
 //	int DegAxiErr =(int)( pMotorInfo.mArgErr / M_PI *180 );
 	int EstOmega =(int)( pMotorInfo.mEstOmega );
@@ -221,16 +225,43 @@ void DebugCtrl::RTTOutput(const MotorInfo &pMotorInfo, const UIStatus &pUIStatus
 //	int milHFOmega = pMotorInfo.mEstOmega_HF * 1000;
 //	int milObsOmega = pMotorInfo.mEstOmega_Observer * 1000;
 
-
-	mJScopeData.mLogCnt = mLogcount;
-	mJScopeData.mVg= milVg;
-	mJScopeData.mVd = milVd;
+	//
 	mJScopeData.mIa = milIa;
 	mJScopeData.mIb = milIb;
 	mJScopeData.mIg = milIg;
 	mJScopeData.mId = milId;
-	mJScopeData.EstOmega = EstOmega;
 	mJScopeData.EstTheta = EstThetaDeg;
+
+
+//	//40k安定
+//	mJScopeData.mLogCnt = mLogcount;
+//	mJScopeData.mIg = milIg;
+//	mJScopeData.mId = milId;
+//	mJScopeData.EstOmega = EstOmega;
+//	mJScopeData.EstTheta = EstThetaDeg;
+
+//	//20k転送だと安定 40kだとしんどい
+//	mJScopeData.mLogCnt = mLogcount;
+//	mJScopeData.mVg= milVg;
+//	mJScopeData.mVd = milVd;
+//	mJScopeData.mIa = milIa;
+//	mJScopeData.mIb = milIb;
+//	mJScopeData.mIg = milIg;
+//	mJScopeData.mId = milId;
+//	mJScopeData.EstOmega = EstOmega;
+//	mJScopeData.EstTheta = EstThetaDeg;
+
+
+//	mJScopeData.mLogCnt = mLogcount;
+//	mJScopeData.mVg= milVg;
+//	mJScopeData.mVd = milVd;
+//	mJScopeData.mIu = milIu;
+//	mJScopeData.mIv = milIv;
+//	mJScopeData.mIw = milIw;
+//	mJScopeData.mIa = milIa;
+//	mJScopeData.mIb = milIb;
+//	mJScopeData.EstTheta = EstThetaDeg;
+
 
 	SEGGER_RTT_Write(1, &mJScopeData, sizeof(mJScopeData));
 //	SEGGER_RTT_Write(1, &mLogcount, sizeof(uint16_t));

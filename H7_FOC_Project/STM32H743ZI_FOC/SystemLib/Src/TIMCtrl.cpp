@@ -40,6 +40,7 @@ void TIMCtrl::TIM1PWMStart(void) {
 	HAL_TIMEx_PWMN_Start(&mHandleTIM1, TIM_CHANNEL_2);
 	HAL_TIM_PWM_Start(&mHandleTIM1, TIM_CHANNEL_3);
 	HAL_TIMEx_PWMN_Start(&mHandleTIM1, TIM_CHANNEL_3);
+
 	HAL_TIM_PWM_Start(&mHandleTIM1, TIM_CHANNEL_4);
 }
 
@@ -242,14 +243,33 @@ void TIMCtrl::HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
 	    PE13     ------> TIM1_CH3
 	    PE14     ------> TIM1_CH4
 	    */
-	    GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_10|GPIO_PIN_12|GPIO_PIN_13;
+
+	    //UH UL
+	    GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
 	    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
 	    GPIO_InitStruct.Pull = GPIO_NOPULL;
-	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	    GPIO_InitStruct.Alternate = GPIO_AF1_TIM1;
 	    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-	    GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_11|GPIO_PIN_14;
+	    //VH VL
+	    GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
+	    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	    GPIO_InitStruct.Pull = GPIO_NOPULL;
+	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	    GPIO_InitStruct.Alternate = GPIO_AF1_TIM1;
+	    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+	    //WH WL
+	    GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_13;
+	    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	    GPIO_InitStruct.Pull = GPIO_NOPULL;
+	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	    GPIO_InitStruct.Alternate = GPIO_AF1_TIM1;
+	    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+	    //timing out
+	    GPIO_InitStruct.Pin = GPIO_PIN_14;
 	    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
 	    GPIO_InitStruct.Pull = GPIO_NOPULL;
 	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;

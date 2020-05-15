@@ -46,9 +46,17 @@ public:
 	static void ADC3Calibration();
 	static void ADC3InjectedStart_IT();
 
-	static int ADC3_INJ_Read_ch1();
-	static int ADC3_INJ_Read_ch2();
-	static int ADC3_INJ_Read_ch3();
+	volatile static inline bool ADC3_JEOS () {
+//		bool test = ADC3 -> JSQR; 				//JL
+		volatile bool jeos = ADC3->ISR && ADC_ISR_JEOS;
+//		bool jeos = ADC3 -> ADC_ISR_JEOS;
+		return jeos;
+	}
+
+	//レジスタ叩く時には必ずvolatile宣言をつける
+	static volatile int ADC3_INJ_Read_ch1() { return ADC3 -> JDR1; }
+	static volatile int ADC3_INJ_Read_ch2() { return ADC3 -> JDR2; }
+	static volatile int ADC3_INJ_Read_ch3() { return ADC3 -> JDR3; }
 
 	static void ADC3IRQHandler();
 

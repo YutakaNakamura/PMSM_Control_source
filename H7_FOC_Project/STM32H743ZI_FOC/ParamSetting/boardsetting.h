@@ -23,7 +23,8 @@
 #define BOARD_OPAMP_R2 33000
 #define BOARD_OPAMP_R3 2700
 #define BOARD_OPAMP_R4 33000
-#define BOARD_SHUNT_R 0.040f
+//#define BOARD_SHUNT_R 0.040f
+#define BOARD_SHUNT_R 0.005f
 
 #define BOARD_IV_RATIO ( ( 1.0f / (float)BOARD_SHUNT_R ) * ( (float)BOARD_OPAMP_R1 / ( (float)BOARD_OPAMP_R1 + (float)BOARD_OPAMP_R2 ) ) * ( ( (float)BOARD_OPAMP_R3 + (float)BOARD_OPAMP_R4 ) / (float)BOARD_OPAMP_R4 ) )
 #define BOARD_IV_OFFSET ( -1.0f * ( 1.0f / (float)BOARD_SHUNT_R ) * ( (float)BOARD_OPAMP_R3 / (float)BOARD_OPAMP_R4 ) * (float)BOARD_OFFSET_VOLTAGE )

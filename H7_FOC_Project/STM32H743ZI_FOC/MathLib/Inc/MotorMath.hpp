@@ -29,17 +29,19 @@ namespace MotorMath {
 
 //input [u,v,w]
 //output [a,b]
-static inline std::array<float, 2> clarkTransform (const std::array<float, 3> &pVector) {
+template <typename T>
+static inline std::array<T, 2> clarkTransform (const std::array<T, 3> &pVector) {
 	//mIalpha = mIu - (mIv + mIw)/2;
 	//mIbeta = (mIv - mIw)* 1.7320508f/2;
-	return { ( 0.81649658f * ( pVector.at(0) - ((pVector.at(1) + pVector.at(2))/2)  ) ),
-				  ( 0.81649658f * ( (pVector.at(1) - pVector.at(2)) * 1.7320508f/2 ) ) };
+	return { ( 0.81649658 * ( pVector.at(0) - ((pVector.at(1) + pVector.at(2))/2)  ) ),
+				  ( 0.81649658 * ( (pVector.at(1) - pVector.at(2)) * 1.7320508/2 ) ) };
 };
 
-static inline std::array<float, 2> parkTransform(const fp_rad &pRadian, const std::array<float, 2> &pVector) {
-	float sinVal = Trigonometric::sin(pRadian);
-	float cosVal = Trigonometric::cos(pRadian);
-	float Invsin = -1.0f * sinVal;
+template <typename T>
+static inline std::array<T, 2> parkTransform(const T &pRadian, const std::array<T, 2> &pVector) {
+	T sinVal = Trigonometric::sin(pRadian);
+	T cosVal = Trigonometric::cos(pRadian);
+	T Invsin = -1.0 * sinVal;
 
 	return { ( cosVal * pVector.at(0) + sinVal * pVector.at(1) ),
 				  ( Invsin * pVector.at(0) + cosVal * pVector.at(1) ) };
@@ -59,18 +61,22 @@ static inline std::array<float, 2> InvparkTransform(const fp_rad &pRadian, const
 
 //input [a,b]
 //output [u,v,w]
-static inline std::array<float, 3> InvclarkTransform (const std::array<float, 2> &pVector) {
+static inline std::array<float, 3> InvclarkTransform (const std::array<float, 2> &pVector,  const float &pVoltageVCC) {
 	//mVu = 0.75f * mValpha;
 	//mVv = -0.75f * mValpha + mValpha / 3 + mVbeta / 1.7320508f;
 	//mVw = - mValpha / 3 - mVbeta / 1.7320508f;
-	std::array<float ,3> RtnArr;
-	RtnArr.at(0) = 0.75f * pVector.at(0);
-	RtnArr.at(1) = -0.75f * pVector.at(0) + pVector.at(0) / 3 + pVector.at(1) / 1.7320508f;
-	RtnArr.at(2) = - pVector.at(0) / 3 - pVector.at(1) / 1.7320508f;
-	RtnArr.at(0) = RtnArr.at(0) * 0.81649658f;//√2/3
-	RtnArr.at(1) = RtnArr.at(1) * 0.81649658f;//√2/3
-	RtnArr.at(2) = RtnArr.at(2) * 0.81649658f;//√2/3
-	return RtnArr;
+
+	float avec = pVector.at(0)/pVoltageVCC;
+	float bvec = pVector.at(1)/pVoltageVCC;
+
+	std::array<float ,3> uvw;
+	uvw.at(0) = 0.75f * avec;
+	uvw.at(1) = -0.75f * avec + avec / 3 + bvec / 1.7320508f;
+	uvw.at(2) = - avec / 3 - bvec / 1.7320508f;
+	uvw.at(0) = uvw.at(0) * 0.81649658f;//√2/3
+	uvw.at(1) = uvw.at(1)  * 0.81649658f;//√2/3
+	uvw.at(2) = uvw.at(2) * 0.81649658f;//√2/3
+	return uvw;
 };
 
 //input [a,b],VCC

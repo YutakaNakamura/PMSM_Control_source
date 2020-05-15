@@ -181,7 +181,11 @@ void MotorMeasure::ReadCurrentTask(void) {
 	Iu = -Iu;//モータ「に」流す電流にするため、反転。
 	Iv = -Iv;
 	Iw = -Iw;
-	setIuvw(Iu, Iv, Iw);
+
+	std::array<float,3> Iuvw = {Iu, Iv, Iw};
+
+	//Iw = -Iu - Iv;
+	mMotorInfo.setIuvw(Iuvw);
 }
 
 
@@ -192,12 +196,12 @@ void MotorMeasure::ReadVoltageTask() {
 }
 
 
-//Motor
-void MotorMeasure::setIuvw(float pIu, float pIv, float pIw){
-	mMotorInfo.mIuvw.at(0) = pIu;
-	mMotorInfo.mIuvw.at(1) = pIv;
-	mMotorInfo.mIuvw.at(2) = pIw;
-}
+////Motor
+//void MotorMeasure::setIuvw(float pIu, float pIv, float pIw){
+//	mMotorInfo.mIuvw.at(0) = pIu;
+//	mMotorInfo.mIuvw.at(1) = pIv;
+//	mMotorInfo.mIuvw.at(2) = pIw;
+//}
 
 void MotorMeasure::ReadAngleTask(void) {
 	if(mControlMode == OpenLoop || mControlMode == OpenLoopToFOC) {
@@ -225,9 +229,7 @@ fp_rad MotorMeasure::GetAngleForFOC(void) {
 
 
 void MotorMeasure::clarkTransform(void) {
-	std::array<float, 3> Iuvw = {mMotorInfo.mIuvw.at(0),
-											   mMotorInfo.mIuvw.at(1),
-											   -mMotorInfo.mIuvw.at(0) - mMotorInfo.mIuvw.at(1)};
+	std::array<float, 3> Iuvw = mMotorInfo.getIuvw();
 	std::array<float, 2> Iab = MotorMath::clarkTransform(Iuvw);
 	mMotorInfo.mIab = Iab;
 }
@@ -437,12 +439,12 @@ void MotorMeasure::invParkTransform(void) {
 }
 
 
-void MotorMeasure::invClarkTransform(void) {
-	std::array<float, 2> Vab = {mMotorInfo.mVab.at(0)/mMotorInfo.mVoltageVCC,
-											  mMotorInfo.mVab.at(1)/mMotorInfo.mVoltageVCC};
-	std::array<float, 3> Vuvw = MotorMath::InvclarkTransform(Vab);
-	mMotorInfo.mDutyuvw = Vuvw;
-}
+//void MotorMeasure::invClarkTransform(void) {
+//	std::array<float, 2> Vab = {mMotorInfo.mVab.at(0)/mMotorInfo.mVoltageVCC,
+//											  mMotorInfo.mVab.at(1)/mMotorInfo.mVoltageVCC};
+//	std::array<float, 3> Vuvw = MotorMath::InvclarkTransform(Vab);
+//	mMotorInfo.mDutyuvw = Vuvw;
+//}
 
 
 void MotorMeasure::SVM(void) {

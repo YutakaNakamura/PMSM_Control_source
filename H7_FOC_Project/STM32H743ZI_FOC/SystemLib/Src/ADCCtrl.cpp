@@ -66,17 +66,17 @@ void ADCCtrl::ADC3InjectedStart_IT() {
 	HAL_ADCEx_InjectedStart_IT(&mHandleADC3);
 }
 
-int ADCCtrl::ADC3_INJ_Read_ch1() {
-	return ADC3 -> JDR1;
-}
-
-int ADCCtrl::ADC3_INJ_Read_ch2() {
-	return ADC3 -> JDR2;
-}
-
-int ADCCtrl::ADC3_INJ_Read_ch3() {
-	return ADC3 -> JDR3;
-}
+//int ADCCtrl::ADC3_INJ_Read_ch1() const{
+//	return ADC3 -> JDR1;
+//}
+//
+//int ADCCtrl::ADC3_INJ_Read_ch2() const{
+//	return ADC3 -> JDR2;
+//}
+//
+//int ADCCtrl::ADC3_INJ_Read_ch3() const{
+//	return ADC3 -> JDR3;
+//}
 
 
 void ADCCtrl::ADC3IRQHandler() {

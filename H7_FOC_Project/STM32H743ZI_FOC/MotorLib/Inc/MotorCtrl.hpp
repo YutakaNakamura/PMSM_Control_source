@@ -28,7 +28,7 @@ public:
 	};
 
 private:
-	MotorInfo mMotorInfo;
+	MotorInfo<float> mMotorInfo;
 	Observer mObserver;
 
 	//鏡相推定器
@@ -72,7 +72,7 @@ public:
 	void SetVhTask();
 	void SetVhTaskForSqWave();
 	void WaveGenTask(void);
-	void ReadCurrentTask();
+	void volatile ReadCurrentTask();
 	void setIuvw(float pIu, float pIv, float pIw);
 	void ReadVoltageTask();
 
@@ -100,7 +100,7 @@ public:
 	void invParkgdtoab(void);
 	void invParkGanmaDelta(void);
 	void invParkTransform(void);
-	void invClarkTransform(void);
+	//void invClarkTransform(void);
 	void SVM(void);
 
 	void VoltageOutputTask(void);

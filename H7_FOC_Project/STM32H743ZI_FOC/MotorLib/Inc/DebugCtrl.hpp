@@ -49,19 +49,50 @@ public:
 
 };
 
+//class JScopeData {
+//public:
+//	int mLogCnt;
+//	int mIg;
+//	int mId;
+//	int EstOmega;
+//	int EstTheta;
+//};
 
 class JScopeData {
 public:
-	int mLogCnt;
-	int mVg;
-	int mVd;
 	int mIa;
 	int mIb;
 	int mIg;
 	int mId;
-	int EstOmega;
 	int EstTheta;
 };
+
+//class JScopeData {
+//public:
+//	int mLogCnt;
+//	int mVg;
+//	int mVd;
+//	int mIa;
+//	int mIb;
+//	int mIg;
+//	int mId;
+//	int EstOmega;
+//	int EstTheta;
+//};
+
+//class JScopeData {
+//public:
+//	int mLogCnt;
+//	int mVg;
+//	int mVd;
+//	int mIu;
+//	int mIv;
+//	int mIw;
+//	int mIa;
+//	int mIb;
+//	int EstTheta;
+//};
+
 
 class DebugCtrl {
 private:
@@ -80,8 +111,9 @@ private:
 public:
 	DebugCtrl();
 	virtual ~DebugCtrl();
-	void RTTOutput(const MotorInfo &pMotorInfo, const UIStatus &pUIStatus);
-	void AddOutputString(const MotorInfo &pMotorInfo);
+	//void RTTOutput(const MotorInfo<float> &pMotorInfo, const UIStatus &pUIStatus){};
+	void RTTOutput(const MotorInfo<float> &pMotorInfo, const UIStatus &pUIStatus);
+	//void AddOutputString(const MotorInfo<volatile float> &pMotorInfo);
 
 };
 

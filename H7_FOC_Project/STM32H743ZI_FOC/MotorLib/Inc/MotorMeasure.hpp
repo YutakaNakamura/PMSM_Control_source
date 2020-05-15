@@ -29,7 +29,7 @@ public:
 
 
 private:
-	MotorInfo mMotorInfo;
+	MotorInfo<float> mMotorInfo;
 	Observer mObserver;
 
 	PID mIdPID, mIqPID;

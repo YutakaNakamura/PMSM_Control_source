@@ -209,9 +209,11 @@ void MotorCtrl::SetVhTask() {
 	float Vh = (float)rxint.at(1)/(float)4095;
 
 	if(HF_ARG_ZERO_FIX) {
+//		mMotorInfo.mVh = 0;
 		mMotorInfo.mVh = Vh;
 	} else {
-		mMotorInfo.mVh = Vh; //通常時は0.3固定にする
+		mMotorInfo.mVh = Vh;
+		//mMotorInfo.mVh = 0.06; //通常時は0.3固定にする
 		//mMotorInfo.mVh = 0.3; //通常時は0.3固定にする
 	}
 
@@ -225,18 +227,23 @@ void MotorCtrl::WaveGenTask() {
 }
 
 
-void MotorCtrl::ReadCurrentTask(void) {
+void volatile MotorCtrl::ReadCurrentTask(void) {
 	//ReadCurrent
-	//エンコーダ読み取り
-	float Iu,Iv,Iw;
-	//増幅率のバイアス考慮してない。あとで計算すること。
-	Iu = (float)ADCCtrl::ADC3_INJ_Read_ch1() * BOARD_IV_RATIO * ADC_VOLTAGE_RATIO + BOARD_IV_OFFSET;
-	Iv = (float)ADCCtrl::ADC3_INJ_Read_ch2() * BOARD_IV_RATIO * ADC_VOLTAGE_RATIO + BOARD_IV_OFFSET;
-	Iw = (float)ADCCtrl::ADC3_INJ_Read_ch3() * BOARD_IV_RATIO * ADC_VOLTAGE_RATIO + BOARD_IV_OFFSET;
-	Iu = -Iu;//モータ「に」流す電流にするため、反転。
+	//ADC電流読み取り
+	while( !ADCCtrl::ADC3_JEOS() ){
+		asm volatile ("nop");
+	}
+	float Iu = (float)ADCCtrl::ADC3_INJ_Read_ch1() * BOARD_IV_RATIO * ADC_VOLTAGE_RATIO + BOARD_IV_OFFSET;
+	float Iv = (float)ADCCtrl::ADC3_INJ_Read_ch2() * BOARD_IV_RATIO * ADC_VOLTAGE_RATIO + BOARD_IV_OFFSET;
+	float Iw = (float)ADCCtrl::ADC3_INJ_Read_ch3() * BOARD_IV_RATIO * ADC_VOLTAGE_RATIO + BOARD_IV_OFFSET;
+	//モータ「に」流す電流にするため、反転。
+	Iu = -Iu;
 	Iv = -Iv;
 	Iw = -Iw;
-	setIuvw(Iu, Iv, Iw);
+	std::array<float,3> Iuvw = {Iu, Iv, Iw};
+
+	mMotorInfo.setIuvw(Iuvw);
+	return;
 }
 
 
@@ -246,13 +253,6 @@ void MotorCtrl::ReadVoltageTask() {
 	mMotorInfo.mVoltageVCC = VCC_VOLTAGE;
 }
 
-
-//Motor
-void MotorCtrl::setIuvw(float pIu, float pIv, float pIw){
-	mMotorInfo.mIuvw.at(0) = pIu;
-	mMotorInfo.mIuvw.at(1) = pIv;
-	mMotorInfo.mIuvw.at(2) = pIw;
-}
 
 void MotorCtrl::ReadAngleTask(void) {
 	if(mControlMode == OpenLoop || mControlMode == OpenLoopToFOC) {
@@ -286,17 +286,19 @@ fp_rad MotorCtrl::GetAngleForFOC(void) {
 
 
 void MotorCtrl::clarkTransform(void) {
-	std::array<float, 3> Iuvw = {mMotorInfo.mIuvw.at(0),
-											   mMotorInfo.mIuvw.at(1),
-											   -mMotorInfo.mIuvw.at(0) - mMotorInfo.mIuvw.at(1)};
-	std::array<float, 2> Iab = MotorMath::clarkTransform(Iuvw);
+	std::array<float, 3> Iuvw = mMotorInfo.getIuvw();
+
+//	std::array<float, 3> Iuvw = {mMotorInfo.mIuvw.at(0),
+//											   mMotorInfo.mIuvw.at(1),
+//											   -mMotorInfo.mIuvw.at(0) - mMotorInfo.mIuvw.at(1)};
+	std::array<float, 2> Iab = MotorMath::clarkTransform<float>(Iuvw);
 	mMotorInfo.mIab = Iab;
 }
 
 void MotorCtrl::parkTransform(void) {
 	fp_rad dqArg = mMotorInfo.mdqArg;
 	std::array<float, 2> Iab = mMotorInfo.mIab;
-	std::array<float, 2> Idq = MotorMath::parkTransform(dqArg, Iab);
+	std::array<float, 2> Idq = MotorMath::parkTransform<float>(dqArg, Iab);
 	mMotorInfo.mIdq = Idq;
 }
 
@@ -483,7 +485,16 @@ void MotorCtrl::CurrentPITaskForConvolution() {
 	mMotorInfo.mIgdErr.at(1) = mMotorInfo.mIgdTarget.at(1) - mMotorInfo.mIgd.at(1);
 
 	//帯域計算が済んでないから無効化
-	std::array<float,2> CulcVgd = {0,0};//PIDgd_control(mMotorInfo.mIgdErr);
+	std::array<float,2> CulcVgd= {0,0};
+	//std::array<float,2> CulcVgd = {0,0};//PIDgd_control(mMotorInfo.mIgdErr);
+	//std::array<float,2> CulcVgd = PIDgd_control(mMotorInfo.mIgdErr);
+
+	if(HF_ARG_ZERO_FIX) {
+		CulcVgd = {mMotorInfo.mCurrentTargetInput,0};
+	}
+	CulcVgd = {0,mMotorInfo.mCurrentTargetInput};
+
+	//float CurrentTargetInput = mMotorInfo.mCurrentTargetInput;
 
 	//ここで重畳させる
 	float VgConv = 0;
@@ -566,25 +577,34 @@ void MotorCtrl::invParkTransform(void) {
 }
 
 
-void MotorCtrl::invClarkTransform(void) {
-	std::array<float, 2> Vab = {mMotorInfo.mVab.at(0)/mMotorInfo.mVoltageVCC,
-											  mMotorInfo.mVab.at(1)/mMotorInfo.mVoltageVCC};
-	std::array<float, 3> Vuvw = MotorMath::InvclarkTransform(Vab);
-	mMotorInfo.mDutyuvw = Vuvw;
-}
+//void MotorCtrl::invClarkTransform(void) {
+//	std::array<float, 2> Vab = {mMotorInfo.mVab.at(0)/mMotorInfo.mVoltageVCC,
+//											  mMotorInfo.mVab.at(1)/mMotorInfo.mVoltageVCC};
+//	std::array<float, 3> Vuvw = MotorMath::InvclarkTransform(Vab);
+//	mMotorInfo.mDutyuvw = Vuvw;
+//}
 
 
 void MotorCtrl::SVM(void) {
 	mMotorInfo.mDutyuvw = MotorMath::SVM(mMotorInfo.mVab, mMotorInfo.mVoltageVCC);
+	//mMotorInfo.mDutyuvw = MotorMath::InvclarkTransform(mMotorInfo.mVab, mMotorInfo.mVoltageVCC);
 }
 
 
 void MotorCtrl::VoltageOutputTask(void) {
 	//0~1のDutyをPWMで出力する。
 	//0 <= mMotorInfo.mDuty <= 1
+
+	//svm
 	TIMCtrl::floatDuty_ch1(mMotorInfo.mDutyuvw.at(0));
 	TIMCtrl::floatDuty_ch2(mMotorInfo.mDutyuvw.at(1));
 	TIMCtrl::floatDuty_ch3(mMotorInfo.mDutyuvw.at(2));
+
+	//clark
+//	TIMCtrl::MotorDuty_ch1(mMotorInfo.mDutyuvw.at(0));
+//	TIMCtrl::MotorDuty_ch2(mMotorInfo.mDutyuvw.at(1));
+//	TIMCtrl::MotorDuty_ch3(mMotorInfo.mDutyuvw.at(2));
+
 }
 
 
