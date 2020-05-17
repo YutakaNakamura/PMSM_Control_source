@@ -17,8 +17,8 @@ private:
 
 public:
 	MirrorPhaseEstimator( T pSamplingTime, T pA0, T pA1, T pB0, T pB1, T pB2)
-		: mFilterN( pSamplingTime, pA0, pA1, pB0, pB1, pB2 )
-		, mFilterP( pSamplingTime, pA0, pA1, pB0, pB1, pB2 )
+		: mFilterP( pSamplingTime, pA0, pA1, pB0, pB1, pB2 )
+		, mFilterN( pSamplingTime, pA0, pA1, pB0, pB1, pB2 )
 	{
 
 	};
@@ -28,8 +28,8 @@ public:
 	constexpr std::array<T, 2> Calculate(const T &pOmega, const std::array<T, 2> &pInput) {
 
 
-		std::array<T, 2> xp = mFilterN.Calculate( -pOmega, pInput );
-		std::array<T, 2> xn = mFilterP.Calculate( pOmega, pInput );
+		std::array<T, 2> xp = mFilterP.Calculate( -pOmega, pInput );
+		std::array<T, 2> xn = mFilterN.Calculate( pOmega, pInput );
 
 		//Calculate [xp , Jxp] xn
 		//		{
