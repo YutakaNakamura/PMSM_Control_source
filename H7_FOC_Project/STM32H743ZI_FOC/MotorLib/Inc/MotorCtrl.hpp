@@ -9,6 +9,7 @@
 #define MOTORCTRL_HPP_
 
 #include "MotorInterface.hpp"
+#include "PhaseSpeedEstimator.hpp"
 
 class MotorCtrl {
 public:
@@ -28,20 +29,15 @@ public:
 	};
 
 private:
+	//電流制御器
+	//PID mIdPID, mIqPID;
+	PID mIganmaPID, mIdeltaPID;
+
 	MotorInfo<float> mMotorInfo;
 	Observer mObserver;
 
-	//鏡相推定器
-	MirrorPhaseEstimator<float> mMirrorPhaseEstimator;
-
-	//PLL
-	PhaseSynchronizer<float> mPhaseSynchronizer;
-
-	//高周波生成器
-	HighFreqVoltageCommander<float> mHFVC;
-
-	PID mIdPID, mIqPID;
-	PID mIganmaPID, mIdeltaPID;
+	//位置,速度推定器
+	PhaseSpeedEstimator<float> mPhaseSpeedEstimator;
 
 	PID mVelocityPID;
 

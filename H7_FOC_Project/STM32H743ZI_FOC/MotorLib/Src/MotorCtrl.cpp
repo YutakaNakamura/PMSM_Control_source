@@ -11,6 +11,18 @@
 constexpr float controllerSamplingTime = CONTROLLER_SAMPLING_TIME;
 constexpr float IntegratorGain = 1;
 
+
+//電流制御器
+constexpr float CurrPIConstOmega = 10; //[rad/s] 電流PIの応答速度
+constexpr float CurrPIConstTime = 1/CurrPIConstOmega; //[s] 電流PIの時間
+
+constexpr float CurrPIGainIganma_P = M_PARAM_LD/CurrPIConstTime;
+constexpr float CurrPIGainIganma_I = CurrPIConstTime/M_PARAM_R;
+
+constexpr float CurrPIGainIdelta_P = M_PARAM_LQ/CurrPIConstTime;
+constexpr float CurrPIGainIdelta_I = CurrPIConstTime/M_PARAM_R;
+
+
 //高周波重畳
 constexpr float ConvHighFreq = HF_CONV_FREQ;
 constexpr float HighFreqOmega = ConvHighFreq * 2 * M_PI;
@@ -25,14 +37,12 @@ constexpr float PhaseSynchronizer_Cn0 = 5625;
 constexpr float PhaseSynchronizer_Cn1 = 150;
 
 MotorCtrl::MotorCtrl()
-: mMirrorPhaseEstimator( controllerSamplingTime,
+: mIganmaPID(controllerSamplingTime, CurrPIGainIganma_P, CurrPIGainIganma_I, 0),
+  mIdeltaPID(controllerSamplingTime, CurrPIGainIdelta_P, CurrPIGainIdelta_I, 0),
+  mPhaseSpeedEstimator(controllerSamplingTime, IntegratorGain,
 		MirrorPhaseEstimator_A0, MirrorPhaseEstimator_A1,
-		MirrorPhaseEstimator_B0, MirrorPhaseEstimator_B1, MirrorPhaseEstimator_B2 )
-, mPhaseSynchronizer(IntegratorGain,
-		controllerSamplingTime,
-		PhaseSynchronizer_Cn0,
-		PhaseSynchronizer_Cn1 )
-, mHFVC(IntegratorGain,controllerSamplingTime)
+		MirrorPhaseEstimator_B0, MirrorPhaseEstimator_B1, MirrorPhaseEstimator_B2,
+		PhaseSynchronizer_Cn0,PhaseSynchronizer_Cn1)
 {
 }
 
@@ -112,10 +122,10 @@ void MotorCtrl::InitMotorControl(void) {
 
 	mArgCtrl.Init();
 
-	mIganmaPID.SetParam(PID_GAIN_IGANMA_P, PID_GAIN_IGANMA_I, PID_GAIN_IGANMA_D);
-	mIdeltaPID.SetParam(PID_GAIN_IDELTA_P, PID_GAIN_IDELTA_I, PID_GAIN_IDELTA_D);
-	mIganmaPID.SetSampleTime(PID_CYCLE_TIME);
-	mIdeltaPID.SetSampleTime(PID_CYCLE_TIME);
+//	mIganmaPID.SetParam(PID_GAIN_IGANMA_P, PID_GAIN_IGANMA_I, PID_GAIN_IGANMA_D);
+//	mIdeltaPID.SetParam(PID_GAIN_IDELTA_P, PID_GAIN_IDELTA_I, PID_GAIN_IDELTA_D);
+//	mIganmaPID.SetSampleTime(PID_CYCLE_TIME);
+//	mIdeltaPID.SetSampleTime(PID_CYCLE_TIME);
 
 	mVelocityPID.SetParam(PID_GAIN_VEL_P, PID_GAIN_VEL_I, PID_GAIN_VEL_D);
 	mVelocityPID.SetSampleTime(PID_CYCLE_TIME_VEL);
@@ -141,7 +151,7 @@ void MotorCtrl::MotorDrive(void) { //モータを動かすモード.他に測定
 	SetCurrentTarget();
 	if(mControlMode == FOC_Convolution) {
 		SetVhTask();
-		WaveGenTask();
+		//WaveGenTask();推定器内に移動
 	}
 
 	GPIODebugTask();//GPIOからオシロに波形を出力する
@@ -220,11 +230,11 @@ void MotorCtrl::SetVhTask() {
 }
 
 
-void MotorCtrl::WaveGenTask() {
-	std::array<float,2> waves = mHFVC.OutputWaves(mMotorInfo.mHighFreqOmega);
-	mMotorInfo.mSinForConv = waves.at(0);
-	mMotorInfo.mCosForConv = waves.at(1);
-}
+//void MotorCtrl::WaveGenTask() {
+//	std::array<float,2> waves = mHFVC.OutputWaves(mMotorInfo.mHighFreqOmega);
+//	mMotorInfo.mSinForConv = waves.at(0);
+//	mMotorInfo.mCosForConv = waves.at(1);
+//}
 
 
 void volatile MotorCtrl::ReadCurrentTask(void) {
@@ -346,16 +356,17 @@ void MotorCtrl::ObserverTask() {
 
 	}else if(mControlMode == FOC_Convolution) {
 		//高周波重畳位置推定
-		float omega = mMotorInfo.mHighFreqOmega;
-		std::array<float, 2> CS2 = mMirrorPhaseEstimator.Calculate(omega, mMotorInfo.mIgd);
-		float delta_theta = atan2(CS2[1], CS2[0])/2;
-
+		float HFomega = mMotorInfo.mHighFreqOmega;//基準高周波速度
 		float est_omega;
 		float est_theta;
-		mPhaseSynchronizer.Calculate(est_omega, est_theta, delta_theta);
-
+		mPhaseSpeedEstimator.Estimate(est_omega, est_theta, HFomega, mMotorInfo.mIgd);
 		mMotorInfo.mEstOmega = est_omega;
 		mMotorInfo.mEstTheta = est_theta;
+
+		//重畳高周波作成
+		std::array<float,2> waves = mPhaseSpeedEstimator.OutputHFV(HFomega);
+		mMotorInfo.mSinForConv = waves.at(0);
+		mMotorInfo.mCosForConv = waves.at(1);
 	}
 
 }
@@ -440,7 +451,7 @@ std::array<float, 2> MotorCtrl::GetCurrentTarget() {
 		}
 
 		IgdTarget.at(0) = 0;//Idcに指令電流いれてみる。
-		IgdTarget.at(1) = CurrentTargetInput*4;//IqcTarget [A]
+		IgdTarget.at(1) = CurrentTargetInput*5;//IqcTarget [A]
 
 
 		return IgdTarget;
@@ -487,12 +498,14 @@ void MotorCtrl::CurrentPITaskForConvolution() {
 	//帯域計算が済んでないから無効化
 	std::array<float,2> CulcVgd= {0,0};
 	//std::array<float,2> CulcVgd = {0,0};//PIDgd_control(mMotorInfo.mIgdErr);
-	//std::array<float,2> CulcVgd = PIDgd_control(mMotorInfo.mIgdErr);
+
 
 	if(HF_ARG_ZERO_FIX) {
 		CulcVgd = {mMotorInfo.mCurrentTargetInput,0};
 	}
-	CulcVgd = {0,mMotorInfo.mCurrentTargetInput};
+
+	CulcVgd = {0,mMotorInfo.mCurrentTargetInput*3};
+	//CulcVgd = PIDgd_control(mMotorInfo.mIgdErr);//PI
 
 	//float CurrentTargetInput = mMotorInfo.mCurrentTargetInput;
 
