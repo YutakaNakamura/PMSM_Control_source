@@ -12,18 +12,19 @@
 
 class PID {
 private:
-	std::array<float, 3> mError;
-	float mOutput;
-	float mOutValOfLast;
+	float mSampleTime;
 	float mGain_p;
 	float mGain_i;
 	float mGain_d;
-	float mSampleTime;
+
+	std::array<float, 3> mError;
+	float mOutput;
+	float mOutValOfLast;
 	float mDiff;
 
 public:
 	PID();
-	PID(float pGain_p, float pGain_i, float pGain_d);
+	PID(float pSampleTime, float pGain_p, float pGain_i, float pGain_d);
 	virtual ~PID();
 	void SetParam(float pGain_p, float pGain_i, float pGain_d);
 	void ErrorUpdate(const float &pError);

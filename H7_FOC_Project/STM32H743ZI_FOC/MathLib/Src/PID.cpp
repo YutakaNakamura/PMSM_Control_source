@@ -20,13 +20,14 @@ PID::PID(){
 
 }
 
-PID::PID(float pGain_p, float pGain_i, float pGain_d)
-:mGain_p(pGain_p), mGain_i(pGain_i), mGain_d(pGain_d)
+PID::PID(float pSampleTime, float pGain_p, float pGain_i, float pGain_d)
+:mSampleTime(pSampleTime), mGain_p(pGain_p), mGain_i(pGain_i), mGain_d(pGain_d)
 {
 	// TODO Auto-generated constructor stub
 	mOutput = 0;
 	mOutValOfLast = 0;
 	mError.fill(0);
+	mDiff = 0;
 }
 
 PID::~PID() {
